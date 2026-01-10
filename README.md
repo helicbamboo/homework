@@ -8,6 +8,7 @@ http://129.211.13.226:40001/sign_in.html
 https://github.com/helicbamboo/homework/tree/main/homework1/demo
 这个是我的代码的位置。其中我的java代码放在/src/main/java/com/example/demo的DemoApplication.java文件里，本来应该分文件的，为了快速写完代码就没分文件。
 而网页html放在/src/main/resources/文件夹里了。
+注意这个代码不能直接用，因为我把里面的我的邮箱删了，需要在DemoApplication.java里面和application.properties里面的对应位置把邮箱补上就能发送邮件。运行效果见上面给出地址的网站。
 
 登录界面的功能有点问题。按理说注册完应该回登录界面并提示账号的，结果有点问题。现在销售身份直接101登录就行，顾客身份直接102登录。
 而且按理应该加入密码的，本地存的账号也应该加密一下的，这些都没做。
