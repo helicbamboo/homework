@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>竹蜻蜓</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* 顶部导航栏 */
+        .top-bar {
+            height: 40px;
+            background-color: #30a0ff;
+            display: flex;
+            align-items: center;
+            padding-left: 10px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .back-button {
+            background-color: transparent;
+            border: none;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 0 !important;
+        }
+        
+        .back-button:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        /* 主要内容区域 */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        /* 功能横栏 */
+        .function-card {
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 30px;
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 0 !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        /* 表单样式 */
+        .input-group {
+            display: flex;
+            margin-bottom: 15px;
+        }
+        
+        .text-input {
+            flex: 1;
+            padding: 8px 12px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 0 !important;
+            outline: none;
+        }
+        
+        .text-input:focus {
+            border-color: #30a0ff;
+        }
+        
+        .submit-button {
+            background-color: #30a0ff;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-left: 10px;
+            border-radius: 0 !important;
+        }
+        
+        .submit-button:hover {
+            background-color: #1e90e0;
+        }
+        
+        /* 响应结果区域 */
+        .result-area {
+            margin-top: 15px;
+            padding: 10px;
+            min-height: 40px;
+            border: 1px dashed #ddd;
+            background-color: #f0f0f0;
+            font-size: 14px;
+            word-break: break-all;
+            border-radius: 0 !important;
+        }
+        
+        /* 退出登录按钮 */
+        .logout-button {
+            width: 100%;
+            height: 40px;
+            background-color: #30a0ff;
+            color: white;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 0 !important;
+        }
+        
+        .logout-button:hover {
+            background-color: #1e90e0;
+        }
+        
+        /* 页面标题 */
+        .page-title {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+            font-size: 24px;
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 600px) {
+            .function-card {
+                padding: 15px;
+            }
+            
+            .input-group {
+                flex-direction: column;
+            }
+            
+            .submit-button {
+                margin-left: 0;
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <div class="top-bar">
+        <button class="back-button" id="backButton">返回</button>
+    </div>
+    
+    <!-- 主要内容区域 -->
+    <div class="main-content">
+        <h1 class="page-title">竹蜻蜓</h1>
+        
+        <!-- 横栏A：修改用户名 -->
+        <div class="function-card">
+            <div class="card-title">修改用户名</div>
+            
+            <div class="input-group">
+                <input type="text" class="text-input" id="userNameInput" placeholder="请输入新用户名">
+                <button class="submit-button" id="submitButton">确认</button>
+            </div>
+            
+            <div class="result-area" id="resultArea">
+                服务端响应将显示在这里
+            </div>
+        </div>
+        
+        <!-- 横栏B：退出登录 -->
+        <div class="function-card">
+            <button class="logout-button" id="logoutButton">退出登录</button>
+        </div>
+    </div>
+
+    <script>
+        // DOM元素
+        const backButton = document.getElementById('backButton');
+        const submitButton = document.getElementById('submitButton');
+        const userNameInput = document.getElementById('userNameInput');
+        const resultArea = document.getElementById('resultArea');
+        const logoutButton = document.getElementById('logoutButton');
+        
+        // 返回按钮功能
+        backButton.addEventListener('click', function() {
+            // 返回上一个页面
+            window.history.back();
+        });
+        
+        // 修改用户名功能
+        submitButton.addEventListener('click', function() {
+            const userName = userNameInput.value.trim();
+            
+            if (!userName) {
+                resultArea.textContent = "请输入用户名";
+                resultArea.style.color = "#e74c3c";
+                return;
+            }
+            
+            // 从localStorage获取user_id_verify
+            const user_id_verify = localStorage.getItem('user_id_verify') || 'test_user_123';
+            
+            // 创建要发送的JSON数据
+            const requestData = {
+                user_id_verify: user_id_verify,
+                user_name: userName
+            };
+            
+            // 显示发送的数据
+            resultArea.textContent = "正在发送请求...";
+            resultArea.style.color = "#333";
+            
+            // 模拟发送POST请求到服务器
+            // 注意：这是一个模拟请求，实际应用中需要指向真实的API端点
+            simulatePostRequest('/set_user_name', requestData)
+                .then(response => {
+                    // 显示服务器返回的success_status
+                    resultArea.textContent = `服务器响应: ${response.success_status}`;
+                    resultArea.style.color = "#27ae60";
+                })
+                .catch(error => {
+                    resultArea.textContent = `请求失败: ${error.message}`;
+                    resultArea.style.color = "#e74c3c";
+                });
+        });
+        
+        // 模拟POST请求的函数
+        function simulatePostRequest(url, data) {
+            return new Promise((resolve, reject) => {
+                // 模拟网络延迟
+                setTimeout(() => {
+                    // 模拟服务器响应
+                    // 在实际应用中，这里应该是真实的fetch或XMLHttpRequest
+                    const mockResponses = [
+                        { success_status: "用户名修改成功" },
+                        { success_status: "用户名已存在，请尝试其他用户名" },
+                        { success_status: "用户验证失败，请重新登录" },
+                        { success_status: "服务器内部错误" }
+                    ];
+                    
+                    // 随机选择一个响应（模拟不同情况）
+                    const randomResponse = mockResponses[Math.floor(Math.random() * mockResponses.length)];
+                    
+                    // 如果是模拟的验证失败，同时清除本地存储
+                    if (randomResponse.success_status === "用户验证失败，请重新登录") {
+                        localStorage.removeItem('user_id_verify');
+                    }
+                    
+                    resolve(randomResponse);
+                    
+                    // 实际应用中应该使用以下代码：
+                    // fetch(url, {
+                    //     method: 'POST',
+                    //     headers: {
+                    //         'Content-Type': 'application/json',
+                    //     },
+                    //     body: JSON.stringify(data)
+                    // })
+                    // .then(response => response.json())
+                    // .then(data => resolve(data))
+                    // .catch(error => reject(error));
+                }, 800);
+            });
+        }
+        
+        // 退出登录功能
+        logoutButton.addEventListener('click', function() {
+            // 删除localStorage中的user_id_verify
+            localStorage.removeItem('user_id_verify');
+            
+            // 跳转到sign_in.html
+            window.location.href = 'sign_in.html';
+        });
+        
+        // 页面加载时检查是否有保存的user_id_verify
+        document.addEventListener('DOMContentLoaded', function() {
+            const user_id_verify = localStorage.getItem('user_id_verify');
+            
+            if (!user_id_verify) {
+                resultArea.textContent = "提示：未检测到用户验证信息，部分功能可能受限";
+                resultArea.style.color = "#f39c12";
+            } else {
+                resultArea.textContent = "已检测到用户验证信息，可以修改用户名";
+                resultArea.style.color = "#27ae60";
+            }
+        });
+        
+        // 允许通过按Enter键提交表单
+        userNameInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                submitButton.click();
+            }
+        });
+    </script>
+</body>
+</html>

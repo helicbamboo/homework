@@ -1,0 +1,5 @@
+com\example\demo\Qsql_table_id_max.class
+com\example\demo\Qsql_table_group.class
+com\example\demo\Qsql_table_topic.class
+com\example\demo\Qsql_table_user.class
+com\example\demo\Qsql_table_message.class

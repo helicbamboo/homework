@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>商品管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            border-radius: 0;
+        }
+        
+        body {
+            font-family: sans-serif;
+            background-color: #f5f5f5;
+        }
+        
+        .top-bar {
+            background-color: #30a0ff;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 0 20px;
+        }
+        
+        .user-btn {
+            background-color: transparent;
+            color: white;
+            border: 1px solid white;
+            height: 30px;
+            padding: 0 15px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .product-list {
+            padding: 20px;
+        }
+        
+        .product-item {
+            background-color: white;
+            border: 1px solid #ddd;
+            margin-bottom: 10px;
+            padding: 15px;
+            position: relative;
+        }
+        
+        .product-name {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .product-id {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .product-price {
+            font-size: 18px;
+            color: #e74c3c;
+            margin-bottom: 5px;
+        }
+        
+        .product-quantity {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .product-actions {
+            position: absolute;
+            right: 15px;
+            top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .edit-btn, .delete-btn, .add-btn, .confirm-btn {
+            height: 30px;
+            padding: 0 15px;
+            cursor: pointer;
+            border: 1px solid #ddd;
+            font-size: 14px;
+        }
+        
+        .edit-btn {
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        
+        .delete-btn {
+            background-color: #f8f9fa;
+            color: #e74c3c;
+        }
+        
+        .add-btn {
+            background-color: #30a0ff;
+            color: white;
+            display: block;
+            margin: 20px auto;
+            width: 150px;
+        }
+        
+        .confirm-btn {
+            background-color: #30a0ff;
+            color: white;
+            margin-top: 10px;
+        }
+        
+        .input-form {
+            background-color: white;
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            height: 35px;
+        }
+        
+        .json-display {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 20px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <button id="userBtn" class="user-btn" onclick="window.location.href='setting.html'"></button>
+    </div>
+    
+    <div id="productList" class="product-list"></div>
+    
+    <div id="addForm" class="input-form">
+        <div class="input-group">
+            <label>商品名称</label>
+            <input type="text" id="newProductName">
+        </div>
+        <div class="input-group">
+            <label>商品数量</label>
+            <input type="text" id="newProductQuantity">
+        </div>
+        <div class="input-group">
+            <label>商品价格</label>
+            <input type="text" id="newProductPrice">
+        </div>
+        <button class="confirm-btn" onclick="createProduct()">确认创建</button>
+    </div>
+    
+    <button class="add-btn" onclick="toggleAddForm()">添加商品</button>
+    
+    <div id="jsonResponse" class="json-display"></div>
+    
+    <script>
+        // 页面加载时执行
+        document.addEventListener('DOMContentLoaded', function() {
+            updateUserButton();
+            loadProducts();
+        });
+        
+        // 更新用户按钮文本
+        function updateUserButton() {
+            const userBtn = document.getElementById('userBtn');
+            const userName = localStorage.getItem('user_name');
+            const userId = localStorage.getItem('user_id_verify');
+            
+            if (userName) {
+                userBtn.textContent = '用户' + userName;
+            } else if (userId) {
+                userBtn.textContent = '用户' + userId;
+            } else {
+                userBtn.textContent = '用户设置';
+            }
+        }
+        
+        // 加载商品列表
+        function loadProducts() {
+            const userId = localStorage.getItem('user_id_verify');
+            if (!userId) {
+                alert('用户未登录');
+                return;
+            }
+            
+            fetch('/get_seller_product', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    user_id_verify: userId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                displayJsonResponse(data);
+                renderProductList(data.product_list || []);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                displayJsonResponse({error: '请求失败'});
+            });
+        }
+        
+        // 渲染商品列表
+        function renderProductList(products) {
+            const productList = document.getElementById('productList');
+            productList.innerHTML = '';
+            
+            products.forEach(product => {
+                const productItem = document.createElement('div');
+                productItem.className = 'product-item';
+                productItem.id = 'product-' + product.product_id;
+                
+                productItem.innerHTML = `
+                    <div class="product-name">${escapeHtml(product.product_name)}</div>
+                    <div class="product-id">ID: ${escapeHtml(product.product_id)}</div>
+                    <div class="product-price">¥${escapeHtml(product.product_price)}</div>
+                    <div class="product-quantity">库存: ${escapeHtml(product.product_quantity)}</div>
+                    <div class="product-actions">
+                        <button class="edit-btn" onclick="toggleEditForm('${product.product_id}')">编辑</button>
+                        <button class="delete-btn" onclick="deleteProduct('${product.product_id}')">删除</button>
+                    </div>
+                    <div id="edit-form-${product.product_id}" class="input-form">
+                        <div class="input-group">
+                            <label>商品名称</label>
+                            <input type="text" id="edit-name-${product.product_id}" value="${escapeHtml(product.product_name)}">
+                        </div>
+                        <div class="input-group">
+                            <label>商品数量</label>
+                            <input type="text" id="edit-quantity-${product.product_id}" value="${escapeHtml(product.product_quantity)}">
+                        </div>
+                        <div class="input-group">
+                            <label>商品价格</label>
+                            <input type="text" id="edit-price-${product.product_id}" value="${escapeHtml(product.product_price)}">
+                        </div>
+                        <button class="confirm-btn" onclick="editProduct('${product.product_id}')">确认修改</button>
+                    </div>
+                `;
+                
+                productList.appendChild(productItem);
+            });
+        }
+        
+        // 显示JSON响应
+        function displayJsonResponse(data) {
+            const jsonDisplay = document.getElementById('jsonResponse');
+            jsonDisplay.textContent = JSON.stringify(data, null, 2);
+        }
+        
+        // 切换添加表单显示
+        function toggleAddForm() {
+            const addForm = document.getElementById('addForm');
+            addForm.style.display = addForm.style.display === 'block' ? 'none' : 'block';
+        }
+        
+        // 切换编辑表单显示
+        function toggleEditForm(productId) {
+            const editForm = document.getElementById('edit-form-' + productId);
+            editForm.style.display = editForm.style.display === 'block' ? 'none' : 'block';
+        }
+        
+        // 创建商品
+        function createProduct() {
+            const userId = localStorage.getItem('user_id_verify');
+            const productName = document.getElementById('newProductName').value;
+            const productQuantity = document.getElementById('newProductQuantity').value;
+            const productPrice = document.getElementById('newProductPrice').value;
+            
+            if (!productName || !productQuantity || !productPrice) {
+                alert('请填写所有字段');
+                return;
+            }
+            
+            fetch('/create_product', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    product_seller_id: userId,
+                    product_name: productName,
+                    product_quantity: productQuantity,
+                    product_price: productPrice
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                displayJsonResponse(data);
+                if (data.success_status === 'success') {
+                    renderProductList(data.product_list || []);
+                    document.getElementById('newProductName').value = '';
+                    document.getElementById('newProductQuantity').value = '';
+                    document.getElementById('newProductPrice').value = '';
+                    toggleAddForm();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                displayJsonResponse({error: '创建失败'});
+            });
+        }
+        
+        // 编辑商品
+        function editProduct(productId) {
+            const userId = localStorage.getItem('user_id_verify');
+            const productName = document.getElementById('edit-name-' + productId).value;
+            const productQuantity = document.getElementById('edit-quantity-' + productId).value;
+            const productPrice = document.getElementById('edit-price-' + productId).value;
+            
+            if (!productName || !productQuantity || !productPrice) {
+                alert('请填写所有字段');
+                return;
+            }
+            
+            fetch('/edit_product', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    product_seller_id: userId,
+                    product_name: productName,
+                    product_quantity: productQuantity,
+                    product_price: productPrice,
+                    product_id: productId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                displayJsonResponse(data);
+                if (data.success_status === 'success') {
+                    renderProductList(data.product_list || []);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                displayJsonResponse({error: '编辑失败'});
+            });
+        }
+        
+        // 删除商品
+        function deleteProduct(productId) {
+            if (!confirm('确定要删除这个商品吗？')) {
+                return;
+            }
+            
+            const userId = localStorage.getItem('user_id_verify');
+            
+            fetch('/delete_product', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    product_seller_id: userId,
+                    product_id: productId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                displayJsonResponse(data);
+                if (data.success_status === 'success') {
+                    renderProductList(data.product_list || []);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                displayJsonResponse({error: '删除失败'});
+            });
+        }
+        
+        // 转义HTML特殊字符
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

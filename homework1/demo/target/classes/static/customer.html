@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>用户界面</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: sans-serif;
+            border-radius: 0 !important;
+        }
+        
+        body {
+            background-color: white;
+        }
+        
+        .bar {
+            height: 40px;
+            background-color: #30a0ff;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+        }
+        
+        .bar-b {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .user-coin {
+            color: white;
+            font-weight: bold;
+        }
+        
+        .user-settings-btn {
+            background-color: transparent;
+            border: none;
+            color: white;
+            height: 40px;
+            padding: 0 15px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .user-settings-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .tab-container {
+            display: flex;
+            height: 40px;
+            border-bottom: 2px solid #30a0ff;
+        }
+        
+        .tab {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #70c0ff;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            border: none;
+            height: 40px;
+        }
+        
+        .tab.active {
+            background-color: white;
+            color: black;
+        }
+        
+        .content {
+            padding: 20px;
+        }
+        
+        .product-item, .order-item {
+            border: 1px solid #ddd;
+            margin-bottom: 15px;
+            padding: 15px;
+            position: relative;
+        }
+        
+        .product-name, .order-total-price {
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+        
+        .product-id, .product-seller, .product-quantity, 
+        .order-id, .order-seller, .order-quantity, .order-price {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        
+        .product-price {
+            font-size: 20px;
+            color: #e74c3c;
+            margin-top: 8px;
+        }
+        
+        .action-container {
+            position: absolute;
+            right: 15px;
+            top: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .add-order-btn, .remove-btn {
+            background-color: #30a0ff;
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            cursor: pointer;
+            height: 36px;
+        }
+        
+        .remove-btn {
+            background-color: #e74c3c;
+        }
+        
+        .quantity-input {
+            width: 60px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            height: 36px;
+        }
+        
+        .submit-order-container {
+            margin-top: 20px;
+            padding: 20px;
+            border-top: 2px solid #30a0ff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .total-price {
+            font-size: 24px;
+            color: #e74c3c;
+        }
+        
+        .submit-order-btn {
+            background-color: #2ecc71;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            cursor: pointer;
+            height: 40px;
+            font-size: 16px;
+        }
+        
+        .email-input-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .email-input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            flex: 1;
+            height: 40px;
+        }
+        
+        .email-submit-btn {
+            background-color: #2ecc71;
+            border: none;
+            color: white;
+            padding: 0 20px;
+            cursor: pointer;
+            height: 40px;
+        }
+        
+        .waiting {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            font-size: 24px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="bar bar-a">
+        <div style="flex: 1;"></div>
+        <button id="userSettingsBtn" class="user-settings-btn">用户设置</button>
+    </div>
+    
+    <div class="bar bar-b">
+        <div style="flex: 1;"></div>
+        <div id="userCoin" class="user-coin">金币：加载中...</div>
+    </div>
+    
+    <div class="tab-container">
+        <button id="tabProduct" class="tab active">商品</button>
+        <button id="tabOrder" class="tab">订单</button>
+    </div>
+    
+    <div id="contentArea" class="content">
+        <!-- 内容将根据状态动态加载 -->
+    </div>
+    
+    <script>
+        // 从localStorage获取用户信息
+        const user_id_verify = localStorage.getItem('user_id_verify');
+        const user_name = localStorage.getItem('user_name');
+        
+        // 页面状态
+        let currentState = 'product';
+        let userCoin = 0;
+        let orderItems = [];
+        let productList = [];
+        
+        // 初始化用户设置按钮文本
+        document.addEventListener('DOMContentLoaded', function() {
+            const userSettingsBtn = document.getElementById('userSettingsBtn');
+            if (user_name) {
+                userSettingsBtn.textContent = '用户' + user_name;
+            } else if (user_id_verify) {
+                userSettingsBtn.textContent = '用户' + user_id_verify;
+            } else {
+                userSettingsBtn.textContent = '用户设置';
+            }
+            
+            // 用户设置按钮点击事件
+            userSettingsBtn.addEventListener('click', function() {
+                window.location.href = 'setting.html';
+            });
+            
+            // 标签切换事件
+            document.getElementById('tabProduct').addEventListener('click', function() {
+                setActiveTab('product');
+            });
+            
+            document.getElementById('tabOrder').addEventListener('click', function() {
+                setActiveTab('order');
+            });
+            
+            // 加载用户金币数
+            loadUserCoin();
+        });
+        
+        // 设置活动标签
+        function setActiveTab(state) {
+            currentState = state;
+            
+            // 更新标签样式
+            document.getElementById('tabProduct').classList.remove('active');
+            document.getElementById('tabOrder').classList.remove('active');
+            
+            if (state === 'product') {
+                document.getElementById('tabProduct').classList.add('active');
+                loadProductList();
+            } else {
+                document.getElementById('tabOrder').classList.add('active');
+                loadOrderList();
+            }
+        }
+        
+        // 加载用户金币
+        function loadUserCoin() {
+            if (!user_id_verify) {
+                document.getElementById('userCoin').textContent = '金币：未登录';
+                return;
+            }
+            
+            fetch('/get_customer_value', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    user_id_verify: user_id_verify
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.user_coin !== undefined) {
+                    userCoin = data.user_coin;
+                    document.getElementById('userCoin').textContent = '金币：' + userCoin;
+                    
+                    // 加载初始内容
+                    loadProductList();
+                }
+            })
+            .catch(error => {
+                console.error('获取金币失败:', error);
+                document.getElementById('userCoin').textContent = '金币：获取失败';
+            });
+        }
+        
+        // 加载商品列表
+        function loadProductList() {
+            if (currentState !== 'product') return;
+            
+            // 显示等待状态
+            document.getElementById('contentArea').innerHTML = '<div class="waiting">加载中...</div>';
+            
+            fetch('/get_customer_product', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({})
+            })
+            .then(response => response.json())
+            .then(data => {
+                productList = data.product_list || [];
+                renderProductList();
+            })
+            .catch(error => {
+                console.error('获取商品列表失败:', error);
+                document.getElementById('contentArea').innerHTML = '<div class="waiting">加载商品失败</div>';
+            });
+        }
+        
+        // 渲染商品列表
+        function renderProductList() {
+            if (currentState !== 'product') return;
+            
+            let html = '';
+            
+            if (productList.length === 0) {
+                html = '<div class="waiting">暂无商品</div>';
+            } else {
+                productList.forEach(product => {
+                    html += `
+                    <div class="product-item">
+                        <div class="product-name">${product.product_name || '未命名商品'}</div>
+                        <div class="product-id">商品ID: ${product.product_id || 'N/A'}</div>
+                        <div class="product-seller">卖家ID: ${product.product_seller_id || 'N/A'}</div>
+                        <div class="product-price">¥${product.product_price || '0.00'}</div>
+                        <div class="product-quantity">库存: ${product.product_quantity || '0'}</div>
+                        <div class="action-container">
+                            <input type="number" class="quantity-input" id="qty_${product.product_id}" value="1" min="1" max="${product.product_quantity || 1}">
+                            <button class="add-order-btn" onclick="addToOrder('${product.product_id}')">加入订单</button>
+                        </div>
+                    </div>
+                    `;
+                });
+            }
+            
+            document.getElementById('contentArea').innerHTML = html;
+        }
+        
+        // 添加到订单
+        function addToOrder(productId) {
+            if (!user_id_verify) {
+                alert('请先登录');
+                return;
+            }
+            
+            const quantityInput = document.getElementById(`qty_${productId}`);
+            const orderQuantity = parseInt(quantityInput.value) || 1;
+            
+            // 找到对应商品
+            const product = productList.find(p => p.product_id === productId);
+            if (!product) return;
+            
+            // 验证库存
+            if (orderQuantity > product.product_quantity) {
+                alert('库存不足');
+                return;
+            }
+            
+            fetch('/create_order_product', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    user_id: user_id_verify,
+                    product_id: productId,
+                    order_quantity: orderQuantity
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // 刷新页面
+                window.location.reload();
+            })
+            .catch(error => {
+                console.error('添加到订单失败:', error);
+                alert('添加到订单失败');
+            });
+        }
+        
+        // 加载订单列表
+        function loadOrderList() {
+            if (currentState !== 'order') return;
+            
+            if (!user_id_verify) {
+                document.getElementById('contentArea').innerHTML = '<div class="waiting">请先登录</div>';
+                return;
+            }
+            
+            // 显示等待状态
+            document.getElementById('contentArea').innerHTML = '<div class="waiting">加载中...</div>';
+            
+            fetch('/get_customer_order', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    user_id_verify: user_id_verify
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                orderItems = data.product_list || [];
+                renderOrderList();
+            })
+            .catch(error => {
+                console.error('获取订单列表失败:', error);
+                document.getElementById('contentArea').innerHTML = '<div class="waiting">加载订单失败</div>';
+            });
+        }
+        
+        // 渲染订单列表
+        function renderOrderList() {
+            if (currentState !== 'order') return;
+            
+            let html = '';
+            let totalPrice = 0;
+            
+            if (orderItems.length === 0) {
+                html = '<div class="waiting">暂无订单</div>';
+            } else {
+                orderItems.forEach(item => {
+                    const itemTotal = (item.product_price || 0) * (item.product_quantity || 0);
+                    totalPrice += itemTotal;
+                    
+                    html += `
+                    <div class="order-item">
+                        <div class="product-name">${item.product_name || '未命名商品'}</div>
+                        <div class="order-id">商品ID: ${item.product_id || 'N/A'}</div>
+                        <div class="order-seller">卖家ID: ${item.product_seller_id || 'N/A'}</div>
+                        <div class="order-price">单价: ¥${item.product_price || '0.00'}</div>
+                        <div class="order-quantity">数量: ${item.product_quantity || '0'}</div>
+                        <div class="order-total-price">总价: ¥${itemTotal.toFixed(2)}</div>
+                        <div class="order-id">订单项ID: ${item.product_order_id || 'N/A'}</div>
+                        <div class="action-container">
+                            <button class="remove-btn" onclick="removeOrderItem('${item.product_order_id}')">移除</button>
+                        </div>
+                    </div>
+                    `;
+                });
+                
+                // 添加提交订单区域
+                html += `
+                <div class="submit-order-container">
+                    <div class="total-price">总价: ¥${totalPrice.toFixed(2)}</div>
+                    <button class="submit-order-btn" onclick="showEmailInput()">提交订单</button>
+                </div>
+                <div id="emailInputContainer" style="display: none;">
+                    <div class="email-input-container">
+                        <input type="email" id="emailInput" class="email-input" placeholder="请输入邮箱地址">
+                        <button class="email-submit-btn" onclick="submitOrder()">提交</button>
+                    </div>
+                </div>
+                `;
+            }
+            
+            document.getElementById('contentArea').innerHTML = html;
+        }
+        
+        // 移除订单项
+        function removeOrderItem(productOrderId) {
+            if (!user_id_verify) {
+                alert('请先登录');
+                return;
+            }
+            
+            fetch('/delete_order_product', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    user_id: user_id_verify,
+                    product_order_id: productOrderId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // 刷新页面并保持在订单状态
+                setActiveTab('order');
+                window.location.reload();
+            })
+            .catch(error => {
+                console.error('移除订单项失败:', error);
+                alert('移除订单项失败');
+            });
+        }
+        
+        // 显示邮箱输入框
+        function showEmailInput() {
+            const emailInputContainer = document.getElementById('emailInputContainer');
+            if (emailInputContainer) {
+                emailInputContainer.style.display = 'block';
+            }
+        }
+        
+        // 提交订单
+        function submitOrder() {
+            if (!user_id_verify) {
+                alert('请先登录');
+                return;
+            }
+            
+            const emailInput = document.getElementById('emailInput');
+            const email = emailInput ? emailInput.value : '';
+            
+            if (!email) {
+                alert('请输入邮箱地址');
+                return;
+            }
+            
+            // 显示等待状态
+            document.getElementById('contentArea').innerHTML = '<div class="waiting">等待中...</div>';
+            
+            // 隐藏标签栏
+            document.querySelector('.tab-container').style.display = 'none';
+            
+            fetch('/submit_order', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    user_id_verify: user_id_verify,
+                    email: email
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // 刷新页面并进入订单状态
+                window.location.reload();
+            })
+            .catch(error => {
+                console.error('提交订单失败:', error);
+                alert('提交订单失败');
+            });
+        }
+    </script>
+</body>
+</html>

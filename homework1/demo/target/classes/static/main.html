@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>竹蜻蜓</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            border-radius: 0 !important;
+        }
+        
+        body {
+            font-family: sans-serif;
+            padding-top: 120px;
+            padding-bottom: 60px;
+        }
+        
+        /* 横栏A */
+        .header-a {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            background-color: #30a0ff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 10px;
+            z-index: 1000;
+        }
+        
+        .back-btn {
+            color: white;
+            background: none;
+            border: none;
+            font-size: 12px;
+            cursor: pointer;
+            padding: 5px;
+        }
+        
+        .right-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .right-btn {
+            color: white;
+            background: none;
+            border: none;
+            font-size: 12px;
+            cursor: pointer;
+            padding: 5px;
+        }
+        
+        /* 横栏B */
+        .header-b {
+            position: fixed;
+            top: 40px;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            display: flex;
+            z-index: 1000;
+        }
+        
+        .tab {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            cursor: pointer;
+            color: white;
+            background-color: #70c0ff;
+        }
+        
+        .tab.active {
+            color: black;
+            background-color: white;
+        }
+        
+        .header-b::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background-color: #30a0ff;
+        }
+        
+        /* 横栏C */
+        .header-c {
+            position: fixed;
+            top: 80px;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            border-bottom: 1px solid #ddd;
+            background-color: white;
+            z-index: 1000;
+        }
+        
+        .search-container {
+            display: flex;
+            align-items: center;
+            flex: 1;
+            margin-right: 10px;
+        }
+        
+        .search-input {
+            flex: 1;
+            height: 24px;
+            border: 1px solid #30a0ff;
+            padding: 0 5px;
+            font-size: 12px;
+        }
+        
+        .search-btn {
+            height: 24px;
+            padding: 0 8px;
+            background-color: #30a0ff;
+            color: white;
+            border: 1px solid #30a0ff;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        
+        .filter-btn {
+            font-size: 12px;
+            padding: 4px 8px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            cursor: pointer;
+        }
+        
+        /* 内容区域 */
+        .content {
+            padding: 0 10px;
+        }
+        
+        .item {
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+        
+        .item-name {
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+        
+        .item-id {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        /* 消息样式 */
+        .message {
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .message-user {
+            font-size: 14px;
+            margin-bottom: 6px;
+        }
+        
+        .message-content {
+            font-size: 16px;
+            font-family: '等线', 'DengXian', sans-serif;
+            margin-bottom: 6px;
+            word-break: break-word;
+        }
+        
+        .message-time {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        /* 底部输入框 */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: white;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+        }
+        
+        .input-container {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .message-input {
+            flex: 1;
+            height: 36px;
+            border: 1px solid #ddd;
+            padding: 0 10px;
+            font-size: 14px;
+        }
+        
+        .send-btn {
+            width: 60px;
+            background-color: #30a0ff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        
+        /* 状态3时的样式 */
+        .state3 .header-c {
+            display: none;
+        }
+        
+        /* 滚动区域 */
+        .scroll-area {
+            height: calc(100vh - 120px);
+            overflow-y: auto;
+        }
+        
+        .state3 .scroll-area {
+            height: calc(100vh - 160px);
+        }
+    </style>
+</head>
+<body>
+    <!-- 横栏A -->
+    <div class="header-a">
+        <button class="back-btn" id="backBtn">返回</button>
+        <div class="right-buttons">
+            <button class="right-btn" id="newGroupBtn">新建群聊</button>
+            <button class="right-btn" id="newPostBtn">新建帖子</button>
+            <button class="right-btn" id="userSettingBtn">用户设置</button>
+        </div>
+    </div>
+    
+    <!-- 横栏B -->
+    <div class="header-b">
+        <div class="tab active" data-tab="recommend">推荐</div>
+        <div class="tab" data-tab="mine">我的</div>
+    </div>
+    
+    <!-- 横栏C -->
+    <div class="header-c">
+        <div class="search-container">
+            <input type="text" class="search-input" placeholder="搜索">
+            <button class="search-btn">搜索</button>
+        </div>
+        <button class="filter-btn">筛选</button>
+    </div>
+    
+    <!-- 内容区域 -->
+    <div class="scroll-area" id="contentArea">
+        <div class="content" id="content"></div>
+    </div>
+    
+    <!-- 底部输入框（状态3时显示） -->
+    <div class="footer" id="footer" style="display: none;">
+        <div class="input-container">
+            <input type="text" class="message-input" id="messageInput" placeholder="输入消息">
+            <button class="send-btn" id="sendBtn">发送</button>
+        </div>
+    </div>
+    
+    <script>
+        // 全局变量
+        let currentState = 0; // 0:初始状态, 1:显示群组, 2:显示话题, 3:显示消息
+        let currentGroupId = '';
+        let currentTopicId = '';
+        let historyStack = []; // 历史状态堆栈
+        
+        // 页面加载时检查登录状态
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            initEventListeners();
+            updateUserButton();
+        });
+        
+        // 检查登录状态
+        function checkAuth() {
+            const user_id_verify = localStorage.getItem('user_id_verify');
+            if (!user_id_verify) {
+                window.location.href = 'sign_in.html';
+            }
+        }
+        
+        // 初始化事件监听
+        function initEventListeners() {
+            // 返回按钮
+            document.getElementById('backBtn').addEventListener('click', goBack);
+            
+            // 用户设置按钮
+            document.getElementById('userSettingBtn').addEventListener('click', function() {
+                window.location.href = 'setting.html';
+            });
+            
+            // 选项卡切换
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    if (this.dataset.tab === 'mine') {
+                        loadMyGroups();
+                    } else {
+                        // 这里可以添加加载推荐内容的函数
+                        clearContent();
+                        currentState = 0;
+                        historyStack = [];
+                    }
+                });
+            });
+            
+            // 新建帖子按钮
+            document.getElementById('newPostBtn').addEventListener('click', function() {
+                if (currentState === 2 && currentGroupId) {
+                    createTopic();
+                }
+            });
+            
+            // 发送消息相关
+            document.getElementById('sendBtn').addEventListener('click', sendMessage);
+            document.getElementById('messageInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+        }
+        
+        // 更新用户按钮文本
+        function updateUserButton() {
+            const btn = document.getElementById('userSettingBtn');
+            const userName = localStorage.getItem('user_name');
+            const userId = localStorage.getItem('user_id');
+            
+            if (userName) {
+                btn.textContent = '用户' + userName;
+            } else if (userId) {
+                btn.textContent = '用户' + userId;
+            } else {
+                btn.textContent = '用户设置';
+            }
+        }
+        
+        // 返回上一状态
+        function goBack() {
+            if (historyStack.length > 0) {
+                const prevState = historyStack.pop();
+                
+                if (prevState.state === 1) {
+                    currentState = 1;
+                    currentGroupId = prevState.groupId || '';
+                    renderGroups(prevState.data);
+                } else if (prevState.state === 2) {
+                    currentState = 2;
+                    currentTopicId = prevState.topicId || '';
+                    currentGroupId = prevState.groupId || '';
+                    renderTopics(prevState.data);
+                } else if (prevState.state === 3) {
+                    currentState = 3;
+                    currentTopicId = prevState.topicId || '';
+                    renderMessages(prevState.data);
+                    document.getElementById('footer').style.display = 'block';
+                    document.body.classList.add('state3');
+                } else {
+                    clearContent();
+                    currentState = 0;
+                    document.getElementById('footer').style.display = 'none';
+                    document.body.classList.remove('state3');
+                }
+            } else {
+                clearContent();
+                currentState = 0;
+                document.getElementById('footer').style.display = 'none';
+                document.body.classList.remove('state3');
+            }
+        }
+        
+        // 加载我的群组
+        function loadMyGroups() {
+            const user_id_verify = localStorage.getItem('user_id_verify');
+            
+            fetch('/get_group', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    user_id_verify: user_id_verify,
+                    sort_type: "",
+                    sort_order: ""
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success_status === "success") {
+                    currentState = 1;
+                    renderGroups(data.group_list);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+        
+        // 渲染群组列表
+        function renderGroups(groups) {
+            clearContent();
+            const content = document.getElementById('content');
+            
+            groups.forEach(group => {
+                const item = document.createElement('div');
+                item.className = 'item';
+                item.dataset.groupId = group.group_id;
+                
+                item.innerHTML = `
+                    <div class="item-name">${group.group_name}</div>
+                    <div class="item-id">${group.group_id}</div>
+                `;
+                
+                item.addEventListener('click', function() {
+                    loadTopics(group.group_id);
+                });
+                
+                content.appendChild(item);
+            });
+        }
+        
+        // 加载话题
+        function loadTopics(groupId) {
+            const user_id_verify = localStorage.getItem('user_id_verify');
+            
+            // 保存当前状态到历史堆栈
+            if (currentState === 1) {
+                historyStack.push({
+                    state: 1,
+                    data: Array.from(document.querySelectorAll('.item')).map(item => ({
+                        group_id: item.dataset.groupId,
+                        group_name: item.querySelector('.item-name').textContent
+                    }))
+                });
+            }
+            
+            fetch('/get_topic', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    user_id_verify: user_id_verify,
+                    group_id: groupId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success_status === "success") {
+                    currentState = 2;
+                    currentGroupId = groupId;
+                    renderTopics(data.topic_list);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+        
+        // 渲染话题列表
+        function renderTopics(topics) {
+            clearContent();
+            const content = document.getElementById('content');
+            
+            topics.forEach(topic => {
+                const item = document.createElement('div');
+                item.className = 'item';
+                item.dataset.topicId = topic.topic_id;
+                
+                item.innerHTML = `
+                    <div class="item-name">${topic.topic_name}</div>
+                    <div class="item-id">${topic.topic_id}</div>
+                `;
+                
+                item.addEventListener('click', function() {
+                    loadMessages(topic.topic_id);
+                });
+                
+                content.appendChild(item);
+            });
+        }
+        
+        // 创建话题
+        function createTopic() {
+            const user_id_verify = localStorage.getItem('user_id_verify');
+            
+            fetch('/create_topic', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    user_id_verify: user_id_verify,
+                    group_id: currentGroupId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success_status === "success") {
+                    loadTopics(currentGroupId);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+        
+        // 加载消息
+        function loadMessages(topicId) {
+            const user_id_verify = localStorage.getItem('user_id_verify');
+            
+            // 保存当前状态到历史堆栈
+            if (currentState === 2) {
+                historyStack.push({
+                    state: 2,
+                    data: Array.from(document.querySelectorAll('.item')).map(item => ({
+                        topic_id: item.dataset.topicId,
+                        topic_name: item.querySelector('.item-name').textContent
+                    })),
+                    groupId: currentGroupId
+                });
+            }
+            
+            fetch('/get_message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    user_id_verify: user_id_verify,
+                    topic_id: topicId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success_status === "success") {
+                    currentState = 3;
+                    currentTopicId = topicId;
+                    renderMessages(data.message_list);
+                    document.getElementById('footer').style.display = 'block';
+                    document.body.classList.add('state3');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+        
+        // 渲染消息列表
+        function renderMessages(messages) {
+            clearContent();
+            const content = document.getElementById('content');
+            
+            messages.forEach(message => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message';
+                
+                messageDiv.innerHTML = `
+                    <div class="message-user">${message.user_id}</div>
+                    <div class="message-content">${message.message_content}</div>
+                    <div class="message-time">${message.message_time}</div>
+                `;
+                
+                content.appendChild(messageDiv);
+            });
+            
+            // 滚动到底部
+            setTimeout(() => {
+                const scrollArea = document.querySelector('.scroll-area');
+                scrollArea.scrollTop = scrollArea.scrollHeight;
+            }, 100);
+        }
+        
+        // 发送消息
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const messageContent = input.value.trim();
+            
+            if (!messageContent) return;
+            
+            const user_id_verify = localStorage.getItem('user_id_verify');
+            
+            fetch('/create_message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    user_id_verify: user_id_verify,
+                    message_content: messageContent,
+                    topic_id: currentTopicId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success_status === "success") {
+                    input.value = '';
+                    loadMessages(currentTopicId);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+        
+        // 清空内容区域
+        function clearContent() {
+            document.getElementById('content').innerHTML = '';
+        }
+        
+        // 页面可见性变化时检查登录状态
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                checkAuth();
+            }
+        });
+    </script>
+</body>
+</html>

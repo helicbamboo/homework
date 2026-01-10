@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>竹蜻蜓</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        body {
+            background-color: #ffffff;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .login-container {
+            width: 320px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 32px;
+            font-weight: 300;
+            color: #000000;
+            margin-bottom: 40px;
+            letter-spacing: 2px;
+        }
+        
+        .toggle-group {
+            display: flex;
+            width: 100%;
+            margin-bottom: 30px;
+            border: 1px solid #e0e0e0;
+            border-radius: 0;
+            overflow: hidden;
+            position: relative;
+            height: 45px;
+        }
+        
+        .toggle-option {
+            flex: 1;
+            text-align: center;
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            color: #666;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            height: 100%;
+            position: relative;
+        }
+        
+        .toggle-option.active {
+            color: #30a0ff;
+            background-color: rgba(48, 160, 255, 0.05);
+        }
+        
+        .toggle-option::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 10px;
+            bottom: 10px;
+            width: 1px;
+            background-color: #e0e0e0;
+        }
+        
+        .toggle-option:last-child::after {
+            display: none;
+        }
+        
+        .input-field {
+            width: 100%;
+            height: 45px;
+            border: 1px solid #30a0ff;
+            background-color: #ffffff;
+            margin-bottom: 25px;
+            padding: 0 15px;
+            font-size: 16px;
+            color: #333;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        
+        .input-field:focus {
+            border-color: #1e88e5;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            height: 45px;
+            background-color: #30a0ff;
+            border: none;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+        
+        .submit-btn:hover {
+            background-color: #1e88e5;
+        }
+        
+        .error-message {
+            width: 100%;
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #ffebee;
+            border: 1px solid #ffcdd2;
+            color: #c62828;
+            font-size: 14px;
+            border-radius: 0;
+            display: none;
+            word-break: break-all;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h1 class="logo">竹蜻蜓</h1>
+        
+        <!-- 用户类型选择：顾客/销售 -->
+        <div class="toggle-group" id="userTypeGroup">
+            <button class="toggle-option active" data-value="customer">顾客</button>
+            <button class="toggle-option" data-value="seller">销售</button>
+        </div>
+        
+        <!-- 登录/注册选择 -->
+        <div class="toggle-group" id="actionGroup">
+            <button class="toggle-option active" data-value="login">登录</button>
+            <button class="toggle-option" data-value="register">注册</button>
+        </div>
+        
+        <!-- 输入框 -->
+        <input type="text" class="input-field" id="userIdInput" placeholder="请输入用户ID">
+        
+        <!-- 提交按钮 -->
+        <button class="submit-btn" id="submitBtn">登录</button>
+        
+        <!-- 错误信息显示 -->
+        <div class="error-message" id="errorMessage"></div>
+    </div>
+
+    <script>
+        // 页面元素
+        const userTypeGroup = document.getElementById('userTypeGroup');
+        const actionGroup = document.getElementById('actionGroup');
+        const userIdInput = document.getElementById('userIdInput');
+        const submitBtn = document.getElementById('submitBtn');
+        const errorMessage = document.getElementById('errorMessage');
+        
+        // 当前状态
+        let currentUserType = 'customer';
+        let currentAction = 'login';
+        
+        // 初始化页面
+        function initPage() {
+            // 检查localStorage，如果有user_id_verify和user_type则跳转
+            const userIdVerify = localStorage.getItem('user_id_verify');
+            const userType = localStorage.getItem('user_type');
+            
+            if (userIdVerify && userType) {
+                // 跳转到对应页面
+                window.location.href = userType + '.html';
+                return;
+            }
+            
+            // 设置切换按钮事件
+            setupToggleButtons(userTypeGroup, (value) => {
+                currentUserType = value;
+                updateSubmitButtonText();
+            });
+            
+            setupToggleButtons(actionGroup, (value) => {
+                currentAction = value;
+                updateSubmitButtonText();
+                
+                // 根据选择显示/隐藏输入框
+                if (value === 'register') {
+                    userIdInput.classList.add('hidden');
+                } else {
+                    userIdInput.classList.remove('hidden');
+                }
+            });
+            
+            // 设置提交按钮事件
+            submitBtn.addEventListener('click', handleSubmit);
+            
+            // 更新提交按钮文本
+            updateSubmitButtonText();
+        }
+        
+        // 设置切换按钮组
+        function setupToggleButtons(container, callback) {
+            const buttons = container.querySelectorAll('.toggle-option');
+            
+            buttons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // 移除所有按钮的active类
+                    buttons.forEach(btn => btn.classList.remove('active'));
+                    // 给当前按钮添加active类
+                    button.classList.add('active');
+                    // 执行回调
+                    callback(button.getAttribute('data-value'));
+                });
+            });
+        }
+        
+        // 更新提交按钮文本
+        function updateSubmitButtonText() {
+            if (currentAction === 'login') {
+                submitBtn.textContent = '登录';
+            } else {
+                submitBtn.textContent = '注册';
+            }
+        }
+        
+        // 处理提交
+        async function handleSubmit() {
+            // 隐藏之前的错误信息
+            errorMessage.style.display = 'none';
+            
+            if (currentAction === 'login') {
+                await handleLogin();
+            } else {
+                await handleRegister();
+            }
+        }
+        
+        // 处理登录
+        async function handleLogin() {
+            const userId = userIdInput.value.trim();
+            
+            if (!userId) {
+                showError('请输入用户ID');
+                return;
+            }
+            
+            // 构建请求数据
+            const requestData = {
+                user_id: userId,
+                user_type: currentUserType
+            };
+            
+            try {
+                const response = await fetch('/sign_in', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                
+                const responseData = await response.json();
+                
+                // 显示响应内容（无论成功与否）
+                console.log('登录响应:', responseData);
+                
+                if (responseData.user_id > 0) {
+                    // 存储数据到localStorage
+                    localStorage.setItem('user_id_verify', responseData.user_id_verify);
+                    localStorage.setItem('user_name', responseData.user_name);
+                    localStorage.setItem('user_type', currentUserType);
+                    
+                    // 跳转到对应页面
+                    window.location.href = currentUserType + '.html';
+                } else {
+                    // 显示错误信息
+                    showError(JSON.stringify(responseData));
+                }
+            } catch (error) {
+                showError('请求失败: ' + error.message);
+            }
+        }
+        
+        // 处理注册
+        async function handleRegister() {
+            // 构建请求数据
+            const requestData = {
+                sign_up: 'sign_up',
+                user_type: currentUserType
+            };
+            
+            try {
+                const response = await fetch('/sign_up', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                
+                const responseText = await response.text();
+                
+                // 显示响应内容
+                console.log('注册响应:', responseText);
+                
+                // 检查是否完全由数字组成
+                if (/^\d+$/.test(responseText)) {
+                    // 跳转到对应页面
+                    window.location.href = currentUserType + '.html';
+                } else {
+                    // 显示错误信息
+                    showError(responseText);
+                }
+            } catch (error) {
+                showError('请求失败: ' + error.message);
+            }
+        }
+        
+        // 显示错误信息
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+        }
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', initPage);
+        
+        // 监听pageshow事件，处理从缓存中加载的情况
+        window.addEventListener('pageshow', function(event) {
+            // 如果是从缓存中加载页面，检查localStorage
+            if (event.persisted) {
+                const userIdVerify = localStorage.getItem('user_id_verify');
+                const userType = localStorage.getItem('user_type');
+                
+                if (userIdVerify && userType) {
+                    window.location.href = userType + '.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>
